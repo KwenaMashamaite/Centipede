@@ -23,6 +23,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "Source/Scenes/GameplayScene.h"
+#include "Source/Actors/MushroomField.h"
 #include <IME/core/engine/Engine.h>
 
 namespace centpd {
@@ -37,11 +38,17 @@ namespace centpd {
     void GameplayScene::onInit() {
         createTilemap(TILE_SIZE, TILE_SIZE);
         m_grid = std::make_unique<Grid>(tilemap(), gameObjects());
+        ime::Vector2u windowSize = engine().getWindow().getSize();
+        m_grid->create( windowSize.y / TILE_SIZE, windowSize.x / TILE_SIZE);
     }
 
     ///////////////////////////////////////////////////////////////
     void GameplayScene::onEnter() {
-        ime::Vector2u windowSize = engine().getWindow().getSize();
-        m_grid->create(windowSize.y / TILE_SIZE, windowSize.x / TILE_SIZE);
+        createActors();
+    }
+
+    ///////////////////////////////////////////////////////////////
+    void GameplayScene::createActors() {
+        MushroomField::create(*m_grid, sCache().getPref("NUM_MUSHROOMS").getValue<unsigned int>());
     }
 }

@@ -22,45 +22,27 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef CENTIPEDE_GAMEPLAYSCENE_H
-#define CENTIPEDE_GAMEPLAYSCENE_H
-
-#include "Source/Grid/Grid.h"
-#include <IME/core/scene/Scene.h>
+#include "Source/Actors/MushroomField.h"
+#include "Source/Actors/Mushroom.h"
+#include <IME/utility/Utils.h>
+#include <cassert>
 
 namespace centpd {
-    /**
-     * @brief Defines the main gameplay
-     */
-    class GameplayScene : public ime::Scene {
-    public:
-        using Ptr = std::unique_ptr<GameplayScene>; //!< Scene ptr
+    ///////////////////////////////////////////////////////////////
+    void MushroomField::create(Grid& grid, unsigned int numMushrooms) {
+        // Prevent an infinite loop - A cell can only be occupied by one mushroom (And the player must not be blocked in its starting row (bottom row))
+        assert(numMushrooms <= grid.getRows() * grid.getCols() - grid.getCols() && "The number of mushrooms must be one row less than the number of cells");
 
-        /**
-         * @brief Create a scene
-         * @return A pointer to the created scene
-         */
-        static GameplayScene::Ptr create();
+        auto randomRowGenerator = ime::utility::createRandomNumGenerator(0, grid.getRows() - 2); // Subtract 2 to exclude the player row (bottom)
+        auto randomColGenerator = ime::utility::createRandomNumGenerator(0, grid.getCols() - 1);
 
-        /**
-         * @brief Initialize scene
-         */
-        void onInit() override;
+        while (numMushrooms > 0) {
+            auto index = ime::Index{randomRowGenerator(), randomColGenerator()};
+            if (grid.isCellOccupied(index))
+                continue;
 
-        /**
-         * @brief Activate the scene
-         */
-        void onEnter() override;
-
-    private:
-        /**
-         * @brief Create game objects
-         */
-        void createActors();
-
-    private:
-        std::unique_ptr<Grid> m_grid; //!< The gameplay grid
-    };
+            grid.addActor(Mushroom::create(grid.getScene()), index);
+            numMushrooms--;
+        }
+    }
 }
-
-#endif //CENTIPEDE_GAMEPLAYSCENE_H

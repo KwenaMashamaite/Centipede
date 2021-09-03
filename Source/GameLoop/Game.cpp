@@ -26,14 +26,17 @@
 #include "Source/Scenes/GameplayScene.h"
 
 namespace centpd {
+    const std::string SETTINGS_DIR = "Res/TextFiles/";
+
     ///////////////////////////////////////////////////////////////
     Game::Game() :
-        engine_{"Centipede", "Res/TextFiles/Settings.txt"}
+        engine_{"Centipede", SETTINGS_DIR + "EngineSettings.txt"}
     {}
 
     ///////////////////////////////////////////////////////////////
     void Game::initialize() {
         engine_.initialize();
+        engine_.getSavablePersistentData().load(SETTINGS_DIR + "GameSettings.txt");
         engine_.pushScene(GameplayScene::create());
     }
 

@@ -22,69 +22,61 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef CENTIPEDE_GRID_H
-#define CENTIPEDE_GRID_H
+#ifndef CENTIPEDE_MUSHROOM_H
+#define CENTIPEDE_MUSHROOM_H
 
 #include <IME/core/game_object/GameObject.h>
-#include <IME/core/tilemap/TileMap.h>
 
 namespace centpd {
     /**
-     * @brief Playing grid
+     * @brief Mushroom actor
      */
-    class Grid {
+    class Mushroom : public ime::GameObject {
     public:
-        /**
-         * @brief Constructors
-         * @param tileMap Third party grid
-         * @param objects Scene objects container
-         */
-        Grid(ime::TileMap& tileMap, ime::GameObjectContainer& objects);
+        using Ptr = std::unique_ptr<Mushroom>;
 
         /**
-         * @brief Create the grid
-         * @param rows The number of rows
-         * @param cols The number of columns
+         * @brief Constructor
+         * @param scene The scene the mushroom belongs to
          */
-        void create(unsigned int rows, unsigned int cols);
+        explicit Mushroom(ime::Scene& scene);
 
         /**
-         * @brief Add an actor to the grid
-         * @param actor The actor to be added to the grid
-         * @param index The index of the cell to add the actor to
+         * @brief Create a mushroom
+         * @param scene The scene the mushroom belongs to
          */
-        void addActor(ime::GameObject::Ptr actor, ime::Index index);
+        static Mushroom::Ptr create(ime::Scene& scene);
 
         /**
-         * @brief Get the number of rows
-         * @return The number of rows
+         * @brief Get the name of this class in string format
+         * @return The name of this class
          */
-        unsigned int getRows() const;
+        std::string getClassName() const override;
 
         /**
-         * @brief Get the number of columns
-         * @return The number of columns
+         * @brief Poison or unpoison the mushroom
+         * @param poison True to poison or false to unpoison
          */
-        unsigned int getCols() const;
+        void setPoisoned(bool poison);
 
         /**
-         * @brief Check if a cell is occupied
-         * @param index The index of the cell to be checked
-         * @return True if occupied, otherwise false
+         * @brief Check if the mushroom is poisoned
+         * @return True if poisoned, otherwise false
          */
-        bool isCellOccupied(const ime::Index& index) const;
+        bool isPoisoned() const;
 
         /**
-         * @brief Get the scene the grid belongs to
-         * @return The scene the grid belongs to
+         * @brief Get the number of times the mushroom has been hit by a Bullet
+         * @return Bullet hir count
          */
-        ime::Scene& getScene();
+        unsigned int getHitCount() const;
 
     private:
-        ime::TileMap& m_grid;
-        ime::GameObjectContainer& m_gameObjects;
+        bool m_isPoisoned;                                 //!< A flag indicating whether or not the mushroom is poisoned
+        unsigned int m_hitCount;                           //!< A count of how many times the mushroom has been struck by a bullet
+        static inline ime::SpriteSheet m_spriteSheet{};    //!< Holds the mushrooms textures
+        static inline bool m_isSpriteSheetCreated = false; //!< A flag indicating whether or not the mushroom spritesheet is created
     };
 }
 
-
-#endif //CENTIPEDE_GRID_H
+#endif //CENTIPEDE_MUSHROOM_H

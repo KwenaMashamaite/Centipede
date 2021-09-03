@@ -22,45 +22,24 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef CENTIPEDE_GAMEPLAYSCENE_H
-#define CENTIPEDE_GAMEPLAYSCENE_H
+#ifndef CENTIPEDE_MUSHROOMFIELD_H
+#define CENTIPEDE_MUSHROOMFIELD_H
 
 #include "Source/Grid/Grid.h"
-#include <IME/core/scene/Scene.h>
 
 namespace centpd {
     /**
-     * @brief Defines the main gameplay
-     */
-    class GameplayScene : public ime::Scene {
+      * @brief Creates a random Mushroom field
+      */
+    class MushroomField {
     public:
-        using Ptr = std::unique_ptr<GameplayScene>; //!< Scene ptr
-
         /**
-         * @brief Create a scene
-         * @return A pointer to the created scene
+         * @brief Create a random Mushroom field
+         * @param grid The grid to create the field in
+         * @param numMushrooms The number of mushrooms to generate
          */
-        static GameplayScene::Ptr create();
-
-        /**
-         * @brief Initialize scene
-         */
-        void onInit() override;
-
-        /**
-         * @brief Activate the scene
-         */
-        void onEnter() override;
-
-    private:
-        /**
-         * @brief Create game objects
-         */
-        void createActors();
-
-    private:
-        std::unique_ptr<Grid> m_grid; //!< The gameplay grid
+        static void create(Grid& grid, unsigned int numMushrooms);
     };
 }
 
-#endif //CENTIPEDE_GAMEPLAYSCENE_H
+#endif //CENTIPEDE_MUSHROOMFIELD_H

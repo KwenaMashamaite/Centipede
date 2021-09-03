@@ -29,7 +29,10 @@ namespace centpd {
     Grid::Grid(ime::TileMap& tileMap, ime::GameObjectContainer& gameObjects) :
         m_grid{tileMap},
         m_gameObjects{gameObjects}
-    {}
+    {
+        // By default, IME sort render layers by the order in which they are created
+        m_grid.renderLayers().create("Mushrooms");
+    }
 
     ///////////////////////////////////////////////////////////////
     void Grid::create(unsigned int rows, unsigned int cols) {
@@ -60,5 +63,15 @@ namespace centpd {
     ///////////////////////////////////////////////////////////////
     unsigned int Grid::getCols() const {
         return m_grid.getSizeInTiles().x;
+    }
+
+    ///////////////////////////////////////////////////////////////
+    bool Grid::isCellOccupied(const ime::Index &index) const {
+        return m_grid.isTileOccupied(index);
+    }
+
+    ///////////////////////////////////////////////////////////////
+    ime::Scene &Grid::getScene() {
+        return m_grid.getScene();
     }
 }
