@@ -1,4 +1,4 @@
-#include "src/GameLoop/Game.h"
+#include "Source/GameLoop/Game.h"
 
 #ifdef NDEBUG
     #include "windows.h"

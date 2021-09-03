@@ -25,7 +25,7 @@
 #ifndef CENTIPEDE_SCOREBOARD_H
 #define CENTIPEDE_SCOREBOARD_H
 
-#include "src/Scoreboard/Score.h"
+#include "Source/Scoreboard/Score.h"
 #include <vector>
 #include <string>
 #include <functional>

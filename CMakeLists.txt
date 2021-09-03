@@ -7,5 +7,5 @@ project(Centipede LANGUAGES CXX VERSION 1.0.0 DESCRIPTION "Classic Centipede gam
 # Set CXX version used by the project
 set(CMAKE_CXX_STANDARD 17)
 
-#Build GameLoop
-add_subdirectory(src)
+#Build game
+add_subdirectory(Source)

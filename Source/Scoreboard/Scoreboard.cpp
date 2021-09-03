@@ -22,7 +22,7 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "src/Scoreboard/Scoreboard.h"
+#include "Source/Scoreboard/Scoreboard.h"
 #include <IME/utility/DiskFileReader.h>
 #include <algorithm>
 
