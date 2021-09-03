@@ -22,24 +22,26 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "Source/GameLoop/Game.h"
 #include "Source/Scenes/GameplayScene.h"
+#include <IME/core/engine/Engine.h>
 
 namespace centpd {
-    ///////////////////////////////////////////////////////////////
-    Game::Game() :
-        engine_{"Centipede", "Res/TextFiles/Settings.txt"}
-    {}
+    const unsigned int TILE_SIZE = 16;
 
     ///////////////////////////////////////////////////////////////
-    void Game::initialize() {
-        engine_.initialize();
-        engine_.pushScene(GameplayScene::create());
+    GameplayScene::Ptr GameplayScene::create() {
+        return std::make_unique<GameplayScene>();
     }
 
     ///////////////////////////////////////////////////////////////
-    void Game::start() {
-        engine_.run();
+    void GameplayScene::onInit() {
+        createTilemap(TILE_SIZE, TILE_SIZE);
+        m_grid = std::make_unique<Grid>(tilemap(), gameObjects());
     }
 
-} // namespace centpd
+    ///////////////////////////////////////////////////////////////
+    void GameplayScene::onEnter() {
+        ime::Vector2u windowSize = engine().getWindow().getSize();
+        m_grid->create(windowSize.y / TILE_SIZE, windowSize.x / TILE_SIZE);
+    }
+}

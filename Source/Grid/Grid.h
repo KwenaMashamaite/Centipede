@@ -22,24 +22,56 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "Source/GameLoop/Game.h"
-#include "Source/Scenes/GameplayScene.h"
+#ifndef CENTIPEDE_GRID_H
+#define CENTIPEDE_GRID_H
+
+#include <IME/core/game_object/GameObject.h>
+#include <IME/core/tilemap/TileMap.h>
 
 namespace centpd {
-    ///////////////////////////////////////////////////////////////
-    Game::Game() :
-        engine_{"Centipede", "Res/TextFiles/Settings.txt"}
-    {}
+    /**
+     * @brief Playing grid
+     */
+    class Grid {
+    public:
+        /**
+         * @brief Constructors
+         * @param tileMap Third party grid
+         * @param objects Scene objects container
+         */
+        Grid(ime::TileMap& tileMap, ime::GameObjectContainer& objects);
 
-    ///////////////////////////////////////////////////////////////
-    void Game::initialize() {
-        engine_.initialize();
-        engine_.pushScene(GameplayScene::create());
-    }
+        /**
+         * @brief Create the grid
+         * @param rows The number of rows
+         * @param cols The number of columns
+         */
+        void create(unsigned int rows, unsigned int cols);
 
-    ///////////////////////////////////////////////////////////////
-    void Game::start() {
-        engine_.run();
-    }
+        /**
+         * @brief Add an actor to the grid
+         * @param actor The actor to be added to the grid
+         * @param index The index of the cell to add the actor to
+         */
+        void addActor(ime::GameObject::Ptr actor, ime::Index index);
 
-} // namespace centpd
+        /**
+         * @brief Get the number of rows
+         * @return The number of rows
+         */
+        unsigned int getRows() const;
+
+        /**
+         * @brief Get the number of columns
+         * @return The number of columns
+         */
+        unsigned int getCols() const;
+
+    private:
+        ime::TileMap& m_grid;
+        ime::GameObjectContainer& m_gameObjects;
+    };
+}
+
+
+#endif //CENTIPEDE_GRID_H

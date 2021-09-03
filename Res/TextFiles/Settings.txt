@@ -36,7 +36,7 @@ FULLSCREEN:BOOL=0
 WINDOW_WIDTH:INT=800
 
 # Height of the game window
-WINDOW_HEIGHT:INT=600
+WINDOW_HEIGHT:INT=596
 
 # Game window icon
 WINDOW_ICON:STRING=Res/Textures/WindowIcon.png

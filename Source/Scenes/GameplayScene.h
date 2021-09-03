@@ -22,24 +22,39 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "Source/GameLoop/Game.h"
-#include "Source/Scenes/GameplayScene.h"
+#ifndef CENTIPEDE_GAMEPLAYSCENE_H
+#define CENTIPEDE_GAMEPLAYSCENE_H
+
+#include "Source/Grid/Grid.h"
+#include <IME/core/scene/Scene.h>
 
 namespace centpd {
-    ///////////////////////////////////////////////////////////////
-    Game::Game() :
-        engine_{"Centipede", "Res/TextFiles/Settings.txt"}
-    {}
+    /**
+     * @brief Defines the main gameplay
+     */
+    class GameplayScene : public ime::Scene {
+    public:
+        using Ptr = std::unique_ptr<GameplayScene>; //!< Scene ptr
 
-    ///////////////////////////////////////////////////////////////
-    void Game::initialize() {
-        engine_.initialize();
-        engine_.pushScene(GameplayScene::create());
-    }
+        /**
+         * @brief Create a scene
+         * @return A pointer to the created scene
+         */
+        static GameplayScene::Ptr create();
 
-    ///////////////////////////////////////////////////////////////
-    void Game::start() {
-        engine_.run();
-    }
+        /**
+         * @brief Initialize scene
+         */
+        void onInit() override;
 
-} // namespace centpd
+        /**
+         * @brief Activate the scene
+         */
+        void onEnter() override;
+
+    private:
+        std::unique_ptr<Grid> m_grid;
+    };
+}
+
+#endif //CENTIPEDE_GAMEPLAYSCENE_H

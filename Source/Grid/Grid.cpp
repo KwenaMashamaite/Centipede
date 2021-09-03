@@ -22,24 +22,43 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "Source/GameLoop/Game.h"
-#include "Source/Scenes/GameplayScene.h"
+#include "Source/Grid/Grid.h"
 
 namespace centpd {
     ///////////////////////////////////////////////////////////////
-    Game::Game() :
-        engine_{"Centipede", "Res/TextFiles/Settings.txt"}
+    Grid::Grid(ime::TileMap& tileMap, ime::GameObjectContainer& gameObjects) :
+        m_grid{tileMap},
+        m_gameObjects{gameObjects}
     {}
 
     ///////////////////////////////////////////////////////////////
-    void Game::initialize() {
-        engine_.initialize();
-        engine_.pushScene(GameplayScene::create());
+    void Grid::create(unsigned int rows, unsigned int cols) {
+        m_grid.construct(ime::Vector2u{rows, cols}, '.');
+
+#ifndef NDEBUG
+        m_grid.getRenderer().setVisible(true);
+#else
+        m_grid.getRenderer().setVisible(false);
+#endif
     }
 
     ///////////////////////////////////////////////////////////////
-    void Game::start() {
-        engine_.run();
+    void Grid::addActor(ime::GameObject::Ptr object, ime::Index index) {
+        assert(object && "Object must not be a nullptr");
+        std::string renderLayer = object->getClassName() + "s";
+
+        m_grid.addChild(object.get(), index);
+        auto group = object->getClassName();
+        m_gameObjects.add(group, std::move(object), 0, renderLayer);
     }
 
-} // namespace centpd
+    ///////////////////////////////////////////////////////////////
+    unsigned int Grid::getRows() const {
+        return m_grid.getSizeInTiles().y;
+    }
+
+    ///////////////////////////////////////////////////////////////
+    unsigned int Grid::getCols() const {
+        return m_grid.getSizeInTiles().x;
+    }
+}

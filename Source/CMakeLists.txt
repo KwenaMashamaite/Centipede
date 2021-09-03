@@ -3,7 +3,8 @@ set(SRC_FILES
         GameLoop/Game.cpp
         Scoreboard/Score.cpp
         Scoreboard/Scoreboard.cpp
-        )
+        Grid/Grid.cpp
+        Scenes/GameplayScene.cpp)
 
 # Set executables output folder
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
