@@ -22,59 +22,47 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "Source/Grid/Grid.h"
-#include <cassert>
+#include "Source/Actors/Player.h"
 
 namespace centpd {
-    ///////////////////////////////////////////////////////////////
-    Grid::Grid(ime::TileMap& tileMap, ime::GameObjectContainer& gameObjects) :
-        m_grid{tileMap},
-        m_gameObjects{gameObjects}
+    Player::Player(ime::Scene &scene, int lives) :
+        GameObject(scene),
+        m_numLives{lives}
     {
-        // By default, IME sorts render layers by the order in which they are created
-        m_grid.renderLayers().create("GameObject"); // ime::GameObject instances go to this layer
-        m_grid.renderLayers().create("Mushroom");
-        m_grid.renderLayers().create("Player");
+        setCollisionGroup("player");
+        setTag("player");
+
+        ime::Sprite& sprite = getSprite();
+        sprite.setTexture("Spritesheet.png");
+        sprite.setTextureRect(ime::UIntRect{0, 80, 7, 8});
+        resetSpriteOrigin();
+        sprite.scale(2.0f, 2.0f);
     }
 
     ///////////////////////////////////////////////////////////////
-    void Grid::create(unsigned int rows, unsigned int cols) {
-        m_grid.construct(ime::Vector2u{rows, cols}, '.');
-
-#ifndef NDEBUG
-        m_grid.getRenderer().setVisible(true);
-#else
-        m_grid.getRenderer().setVisible(false);
-#endif
+    Player::Ptr Player::create(ime::Scene &scene, int lives) {
+        return std::make_unique<Player>(scene, lives);
     }
 
     ///////////////////////////////////////////////////////////////
-    ime::GameObject* Grid::addActor(ime::GameObject::Ptr object, ime::Index index) {
-        assert(object && "Object must not be a nullptr");
-
-        m_grid.addChild(object.get(), index);
-        std::string renderLayer = object->getClassName();
-        const std::string& group = renderLayer;
-        return m_gameObjects.add(group, std::move(object), 0, renderLayer);
+    std::string Player::getClassName() const {
+        return "Player";
     }
 
     ///////////////////////////////////////////////////////////////
-    unsigned int Grid::getRows() const {
-        return m_grid.getSizeInTiles().y;
+    void Player::setLives(int lives) {
+        if (m_numLives != lives) {
+            m_numLives = lives;
+
+            if (m_numLives == 0)
+                setActive(false);
+
+            emitChange(ime::Property{"lives", m_numLives});
+        }
     }
 
     ///////////////////////////////////////////////////////////////
-    unsigned int Grid::getCols() const {
-        return m_grid.getSizeInTiles().x;
-    }
-
-    ///////////////////////////////////////////////////////////////
-    bool Grid::isCellOccupied(const ime::Index &index) const {
-        return m_grid.isTileOccupied(index);
-    }
-
-    ///////////////////////////////////////////////////////////////
-    ime::Scene &Grid::getScene() {
-        return m_grid.getScene();
+    int Player::getLives() const {
+        return m_numLives;
     }
 }

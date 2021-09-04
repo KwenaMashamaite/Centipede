@@ -24,7 +24,9 @@
 
 #include "Source/Scenes/GameplayScene.h"
 #include "Source/Actors/MushroomField.h"
+#include "Source/Actors/Player.h"
 #include <IME/core/engine/Engine.h>
+#include <IME/core/physics/grid/KeyboardGridMover.h>
 
 namespace centpd {
     const unsigned int TILE_SIZE = 16;
@@ -39,7 +41,7 @@ namespace centpd {
         createTilemap(TILE_SIZE, TILE_SIZE);
         m_grid = std::make_unique<Grid>(tilemap(), gameObjects());
         ime::Vector2u windowSize = engine().getWindow().getSize();
-        m_grid->create( windowSize.y / TILE_SIZE, windowSize.x / TILE_SIZE);
+        m_grid->create( windowSize.y / TILE_SIZE - ((m_grid->getRows() + 2) % TILE_SIZE), windowSize.x / TILE_SIZE - ((m_grid->getCols() + 3) % TILE_SIZE));
     }
 
     ///////////////////////////////////////////////////////////////
@@ -49,6 +51,28 @@ namespace centpd {
 
     ///////////////////////////////////////////////////////////////
     void GameplayScene::createActors() {
+        // Create the player
+        auto startPos = ime::Index{static_cast<int>(m_grid->getRows() - 1), static_cast<int>((m_grid->getCols() - 1) / 2)};
+        auto lives = sCache().getPref("PLAYER_LIVES").getValue<int>();
+        ime::GameObject* player = m_grid->addActor(Player::create(*this, lives), startPos);
+
+        // Create mushrooms
         MushroomField::create(*m_grid, sCache().getPref("NUM_MUSHROOMS").getValue<unsigned int>());
+
+        // Player movement controller
+        auto playerSpeed = sCache().getPref("PLAYER_SPEED").getValue<float>();
+        auto playerMover = ime::KeyboardGridMover::create(tilemap(), player);
+        playerMover->setMovementTrigger(ime::MovementTrigger::OnKeyDownHeld);
+        playerMover->setMaxLinearSpeed(ime::Vector2f{playerSpeed, playerSpeed});
+        gridMovers().addObject(std::move(playerMover));
+
+        //Limit the player to a lower section of the grid with invisible walls
+        const int row = (m_grid->getRows() - 1) - sCache().getPref("PLAYER_AREA_HEIGHT").getValue<int>();
+        for (int col = 0; col < m_grid->getCols(); col++) {
+            auto wall = ime::GameObject::create(*this);
+            wall->setAsObstacle(true);
+            wall->setCollisionGroup("wall");
+            m_grid->addActor(std::move(wall), ime::Index{row, col});
+        }
     }
 }

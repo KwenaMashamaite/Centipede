@@ -22,69 +22,54 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef CENTIPEDE_GRID_H
-#define CENTIPEDE_GRID_H
+#ifndef CENTIPEDE_PLAYER_H
+#define CENTIPEDE_PLAYER_H
 
 #include <IME/core/game_object/GameObject.h>
-#include <IME/core/tilemap/TileMap.h>
 
 namespace centpd {
     /**
-     * @brief Playing grid
+     * @brief User controlled character
      */
-    class Grid {
+    class Player : public ime::GameObject {
     public:
-        /**
-         * @brief Constructors
-         * @param tileMap Third party grid
-         * @param objects Scene objects container
-         */
-        Grid(ime::TileMap& tileMap, ime::GameObjectContainer& objects);
+        using Ptr = std::unique_ptr<Player>;
 
         /**
-         * @brief Create the grid
-         * @param rows The number of rows
-         * @param cols The number of columns
+         * @brief Constructor
+         * @param scene The scene the player belongs to
+         * @param lives The initial number of lives
          */
-        void create(unsigned int rows, unsigned int cols);
+        explicit Player(ime::Scene &scene, int lives);
 
         /**
-         * @brief Add an actor to the grid
-         * @param actor The actor to be added to the grid
-         * @param index The index of the cell to add the actor to
+         * @brief Create a player
+         * @param scene The scene the player belongs to
+         * @param lives The number of lives
          */
-        ime::GameObject* addActor(ime::GameObject::Ptr actor, ime::Index index);
+        static Player::Ptr create(ime::Scene& scene, int lives);
 
         /**
-         * @brief Get the number of rows
-         * @return The number of rows
+         * @brief Get the name of this class in string format
+         * @return The name of this class
          */
-        unsigned int getRows() const;
+        std::string getClassName() const override;
 
         /**
-         * @brief Get the number of columns
-         * @return The number of columns
+         * @brief Set the number of lives
+         * @param lives The number of lives
          */
-        unsigned int getCols() const;
+        void setLives(int lives);
 
         /**
-         * @brief Check if a cell is occupied
-         * @param index The index of the cell to be checked
-         * @return True if occupied, otherwise false
+         * @brief Get the number of lives
+         * @return The number of lives
          */
-        bool isCellOccupied(const ime::Index& index) const;
-
-        /**
-         * @brief Get the scene the grid belongs to
-         * @return The scene the grid belongs to
-         */
-        ime::Scene& getScene();
+        int getLives() const;
 
     private:
-        ime::TileMap& m_grid;
-        ime::GameObjectContainer& m_gameObjects;
+        int m_numLives; //!< Player lives count
     };
 }
 
-
-#endif //CENTIPEDE_GRID_H
+#endif //CENTIPEDE_PLAYER_H

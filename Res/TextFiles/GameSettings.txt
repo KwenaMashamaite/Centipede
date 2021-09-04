@@ -27,4 +27,13 @@
 //###################################################
 
 # The initial number of mushrooms in the game
-NUM_MUSHROOMS:UINT=5
+NUM_MUSHROOMS:UINT=50
+
+# The initial number of the player lives
+PLAYER_LIVES:INT=3
+
+# The players movement speed
+PLAYER_SPEED:FLOAT=120
+
+# The height of the players movement area at the bottom of the grid
+PLAYER_AREA_HEIGHT:INT=6
