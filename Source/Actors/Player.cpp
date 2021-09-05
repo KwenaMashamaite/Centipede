@@ -23,11 +23,15 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "Source/Actors/Player.h"
+#include "Source/Scenes/GameplayScene.h"
+#include <cassert>
 
 namespace centpd {
     Player::Player(ime::Scene &scene, int lives) :
         GameObject(scene),
-        m_numLives{lives}
+        m_numLives{lives},
+        m_posChangeId{-1},
+        m_bullet{nullptr}
     {
         setCollisionGroup("player");
         setTag("player");
@@ -42,6 +46,18 @@ namespace centpd {
     ///////////////////////////////////////////////////////////////
     Player::Ptr Player::create(ime::Scene &scene, int lives) {
         return std::make_unique<Player>(scene, lives);
+    }
+
+    ///////////////////////////////////////////////////////////////
+    void Player::setBullet(Bullet *bullet) {
+        assert(bullet && "Bullet cannot be a nullptr");
+        assert(!bullet->isFired() && "Cannot assign player a bullet that's already fired");
+
+        if (!m_bullet) {
+            m_bullet = bullet;
+            m_bullet->setOwner(this);
+            m_bullet->getCollisionExcludeList().add(getCollisionGroup()); // Player is invulnerable to bullets
+        }
     }
 
     ///////////////////////////////////////////////////////////////
@@ -64,5 +80,27 @@ namespace centpd {
     ///////////////////////////////////////////////////////////////
     int Player::getLives() const {
         return m_numLives;
+    }
+
+    ///////////////////////////////////////////////////////////////
+    bool Player::canShoot() const {
+        return m_bullet != nullptr;
+    }
+
+    ///////////////////////////////////////////////////////////////
+    Bullet* Player::shoot() {
+        if (m_bullet) {
+            m_bullet->fire();
+            Bullet* temp = m_bullet;
+            m_bullet = nullptr;
+            return temp;
+        }
+
+        return nullptr;
+    }
+
+    Player::~Player() {
+        if (m_bullet)
+            m_bullet->setOwner(nullptr);
     }
 }

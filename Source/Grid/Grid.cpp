@@ -33,6 +33,7 @@ namespace centpd {
     {
         // By default, IME sorts render layers by the order in which they are created
         m_grid.renderLayers().create("GameObject"); // ime::GameObject instances go to this layer
+        m_grid.renderLayers().create("Bullet");
         m_grid.renderLayers().create("Mushroom");
         m_grid.renderLayers().create("Player");
     }
@@ -56,6 +57,16 @@ namespace centpd {
         std::string renderLayer = object->getClassName();
         const std::string& group = renderLayer;
         return m_gameObjects.add(group, std::move(object), 0, renderLayer);
+    }
+
+    ///////////////////////////////////////////////////////////////
+    void Grid::addActor(ime::GameObject *actor, ime::Index index) {
+        m_grid.addChild(actor, index);
+    }
+
+    ///////////////////////////////////////////////////////////////
+    ime::Index Grid::getActorTile(ime::GameObject *actor) {
+        return m_grid.getTileOccupiedByChild(actor).getIndex();
     }
 
     ///////////////////////////////////////////////////////////////

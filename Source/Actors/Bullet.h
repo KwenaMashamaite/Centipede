@@ -22,39 +22,30 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef CENTIPEDE_PLAYER_H
-#define CENTIPEDE_PLAYER_H
+#ifndef CENTIPEDE_BULLET_H
+#define CENTIPEDE_BULLET_H
 
-#include "Source/Actors/Bullet.h"
 #include <IME/core/game_object/GameObject.h>
 
 namespace centpd {
-    /**
-     * @brief User controlled character
-     */
-    class Player : public ime::GameObject {
+    class Player;
+
+    class Bullet : public ime::GameObject {
     public:
-        using Ptr = std::unique_ptr<Player>;
+        using Ptr = std::unique_ptr<Bullet>;
 
         /**
          * @brief Constructor
-         * @param scene The scene the player belongs to
-         * @param lives The initial number of lives
+         * @param scene The scene the bullet belongs to
          */
-        Player(ime::Scene &scene, int lives);
+        explicit Bullet(ime::Scene &scene);
 
         /**
-         * @brief Create a player
-         * @param scene The scene the player belongs to
-         * @param lives The number of lives
+         * @brief Create a bullet
+         * @param scene The scene the bullet belongs to
+         * @return The created bullet
          */
-        static Player::Ptr create(ime::Scene& scene, int lives);
-
-        /**
-         * @brief Set the bullet fired by the player
-         * @param bullet The bullet to be fired by the player
-         */
-        void setBullet(Bullet* bullet);
+        static Bullet::Ptr create(ime::Scene& scene);
 
         /**
          * @brief Get the name of this class in string format
@@ -63,46 +54,56 @@ namespace centpd {
         std::string getClassName() const override;
 
         /**
-         * @brief Set the number of lives
-         * @param lives The number of lives
+         * @brief Set the owner of the bullet
+         * @param owner The owner of the bullet
+         *
+         * The owner of a bullet cannot be changed after the bullet is fired
          */
-        void setLives(int lives);
+        void setOwner(Player* owner);
 
         /**
-         * @brief Get the number of lives
-         * @return The number of lives
+         * @brief Get the game object that owns the bullet
+         * @return The owner of the bullet, or a nullptr if none exists
+         *
+         * If the bullet owner is destroyed after the bullet is fired, this
+         * function will return a nullptr
          */
-        int getLives() const;
+        Player* getOwner();
+        const Player* getOwner() const;
 
         /**
-         * @brief Check if the player can shoot a bullet
-         * @return True if can shoot one, otherwise false
+         * @brief Fire the bullet
+         * @param shooter The shooter of the bullet
+         * @return True if the bullet was fired or otherwise false
          *
-         * The player can only shoot if it has a bullet
-         *
-         * @see setBullet
+         * This function returns false if it does not have an owner or
+         * when it is inactive
          */
-        bool canShoot() const;
+        bool fire();
 
         /**
-         * @brief Shoot a bullet
-         * @return The fired bullet or a nullptr if the player cannot shoot
-         *          at the moment
-         *
-         * @see canShoot
+         * @brief Check if the bullet is fired or not
+         * @return True if fired, otherwise false
          */
-        Bullet* shoot();
+        bool isFired() const;
 
         /**
          * @brief Destructor
          */
-        ~Player() override;
+        ~Bullet() override;
 
     private:
-        int m_numLives;    //!< Player lives count
-        int m_posChangeId; //!< The id of a position change event listener
-        Bullet* m_bullet;  //!< Bullet fired by player
+        /**
+         * @brief Sync the position of the bullet with that of its owner
+         */
+        void syncPosition();
+
+    private:
+        Player* m_owner;  //!< Bullet shooter
+        int m_destId;     //!< The id of the owners destruction id
+        int m_posChangeId;
+        bool m_isFired;   //!< A flag indicating whether or not the bullet is fired
     };
 }
 
-#endif //CENTIPEDE_PLAYER_H
+#endif //CENTIPEDE_BULLET_H

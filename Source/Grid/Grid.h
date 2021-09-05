@@ -52,8 +52,29 @@ namespace centpd {
          * @brief Add an actor to the grid
          * @param actor The actor to be added to the grid
          * @param index The index of the cell to add the actor to
+         *
+         * Note that @a actor is assigned to an object group and render layer
+         * that have the same name as its class name (see ime::Object::getClassName()).
          */
         ime::GameObject* addActor(ime::GameObject::Ptr actor, ime::Index index);
+
+        /**
+         * @brief Add an actor to the grid
+         * @param actor The actor to be added to the grid
+         * @param index The index of the cell to add the actor to
+         *
+         * This function does not assign @a actor to a group or render layer.
+         * It is used for objects that already have them but are not in the
+         * grid
+         */
+        void addActor(ime::GameObject* actor, ime::Index index);
+
+        /**
+         * @brief Get the index of the cell occupied by an actor
+         * @param actor The actor to get the index of
+         * @return The index of the actor in the grid, otherwise {-1, -1}
+         */
+        ime::Index getActorTile(ime::GameObject* actor);
 
         /**
          * @brief Get the number of rows

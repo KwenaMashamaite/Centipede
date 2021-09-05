@@ -44,6 +44,10 @@ namespace centpd {
         setCollisionGroup("mushroom");
         setAsObstacle(true);
 
+        // This makes a bullet generate a collision event only after it has
+        // occupied the same tile as the mushroom
+        getObstacleCollisionFilter().add("bullet");
+
         // Set initial mushroom (full) texture
         getSprite() = m_spriteSheet.getSprite(ime::Index{0, 0});
         getSprite().scale(2.0f, 2.0f);

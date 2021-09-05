@@ -29,7 +29,15 @@
 #include <IME/core/physics/grid/KeyboardGridMover.h>
 
 namespace centpd {
-    const unsigned int TILE_SIZE = 16;
+    namespace {
+        const unsigned int TILE_SIZE = 16;
+    }
+
+    ///////////////////////////////////////////////////////////////
+    GameplayScene::GameplayScene() :
+        m_bulletMover{nullptr},
+        m_shouldFire{false}
+    {}
 
     ///////////////////////////////////////////////////////////////
     GameplayScene::Ptr GameplayScene::create() {
@@ -38,41 +46,118 @@ namespace centpd {
 
     ///////////////////////////////////////////////////////////////
     void GameplayScene::onInit() {
+        // Create the grid
         createTilemap(TILE_SIZE, TILE_SIZE);
         m_grid = std::make_unique<Grid>(tilemap(), gameObjects());
         ime::Vector2u windowSize = engine().getWindow().getSize();
         m_grid->create( windowSize.y / TILE_SIZE - ((m_grid->getRows() + 2) % TILE_SIZE), windowSize.x / TILE_SIZE - ((m_grid->getCols() + 3) % TILE_SIZE));
+
+        // Create the bullets grid mover
+        m_bulletMover = gridMovers().addObject(ime::GridMover::create(tilemap()));
+        auto bulletSpeed = sCache().getPref("BULLET_SPEED").getValue<float>();
+        m_bulletMover->setMaxLinearSpeed(ime::Vector2f{bulletSpeed, bulletSpeed});
+        m_bulletMover->setMovementRestriction(ime::GridMover::MoveRestriction::Vertical);
+
+        // Destroy bullet when it hits the top grid border
+        m_bulletMover->onGridBorderCollision([this]{
+            m_bulletMover->getTarget()->setActive(false);
+        });
+
+        // Keep the bullet moving up
+        m_bulletMover->onAdjacentMoveEnd([this](ime::Index) {
+            m_bulletMover->requestDirectionChange(ime::Up);
+        });
+
+        // Destroy inactive objects
+        engine().onFrameEnd([this] {
+            gameObjects().removeIf([](const ime::GameObject* actor) {
+                return !actor->isActive();
+            });
+        });
     }
 
     ///////////////////////////////////////////////////////////////
     void GameplayScene::onEnter() {
         createActors();
+
+        // Limit the player to a small section at the bottom of the grid
+        const int row = (static_cast<int>(m_grid->getRows()) - 1) - sCache().getPref("PLAYER_AREA_HEIGHT").getValue<int>();
+        for (int col = 0; col < m_grid->getCols(); col++) {
+            auto wall = ime::GameObject::create(*this);
+            wall->setAsObstacle(true);
+            wall->setCollisionGroup("invisibleWall");
+            m_grid->addActor(std::move(wall), ime::Index{row, col});
+        }
+
+        // Shoot bullet
+        input().onKeyDown([this](ime::Keyboard::Key key) {
+            if (key == ime::Keyboard::Key::Space) {
+                m_shouldFire = true;
+
+                ime::GridMover* playerMover = gridMovers().findByTag("playerMover");
+                if (!playerMover->isTargetMoving())
+                    fireBullet(gameObjects().findByTag<Player>("player"), playerMover->getCurrentTileIndex());
+            }
+        });
     }
 
     ///////////////////////////////////////////////////////////////
     void GameplayScene::createActors() {
-        // Create the player
+        MushroomField::create(*m_grid, sCache().getPref("NUM_MUSHROOMS").getValue<unsigned int>());
+        createPlayer();
+    }
+
+    ///////////////////////////////////////////////////////////////
+    void GameplayScene::createPlayer() {
         auto startPos = ime::Index{static_cast<int>(m_grid->getRows() - 1), static_cast<int>((m_grid->getCols() - 1) / 2)};
         auto lives = sCache().getPref("PLAYER_LIVES").getValue<int>();
-        ime::GameObject* player = m_grid->addActor(Player::create(*this, lives), startPos);
+        auto* player = static_cast<Player*>(m_grid->addActor(Player::create(*this, lives), startPos));
 
-        // Create mushrooms
-        MushroomField::create(*m_grid, sCache().getPref("NUM_MUSHROOMS").getValue<unsigned int>());
+        // By default the player can fire a bullet, so we give them one
+        Bullet::Ptr bullet = Bullet::create(*this);
+        player->setBullet(bullet.get());
+        gameObjects().add(std::move(bullet));
 
-        // Player movement controller
+        // Players grid movement controller
         auto playerSpeed = sCache().getPref("PLAYER_SPEED").getValue<float>();
         auto playerMover = ime::KeyboardGridMover::create(tilemap(), player);
+        playerMover->setTag("playerMover");
         playerMover->setMovementTrigger(ime::MovementTrigger::OnKeyDownHeld);
         playerMover->setMaxLinearSpeed(ime::Vector2f{playerSpeed, playerSpeed});
-        gridMovers().addObject(std::move(playerMover));
 
-        //Limit the player to a lower section of the grid with invisible walls
-        const int row = (m_grid->getRows() - 1) - sCache().getPref("PLAYER_AREA_HEIGHT").getValue<int>();
-        for (int col = 0; col < m_grid->getCols(); col++) {
-            auto wall = ime::GameObject::create(*this);
-            wall->setAsObstacle(true);
-            wall->setCollisionGroup("wall");
-            m_grid->addActor(std::move(wall), ime::Index{row, col});
+        // Since we are using ime::GridMover to move the bullet, it must be
+        // in the grid before starting the movement. But we want to fire only
+        // when the player is not moving so that the bullet appears to be coming
+        // out the mouth of the player
+        playerMover->onAdjacentMoveEnd([player, this](ime::Index index) {
+            fireBullet(player, index);
+        });
+
+        gridMovers().addObject(std::move(playerMover));
+    }
+
+    ///////////////////////////////////////////////////////////////
+    void GameplayScene::fireBullet(Player* player, ime::Index index) {
+        if (m_shouldFire) {
+            m_shouldFire = false;
+            if (player->canShoot()) {
+                Bullet *bullet = player->shoot();
+                m_grid->addActor(bullet, index);
+                m_bulletMover->setTarget(bullet);
+                m_bulletMover->requestDirectionChange(ime::Up);
+
+                // Give the player another bullet, when this one is destroyed
+                bullet->onPropertyChange("active", [this](const ime::Property& property) {
+                    if (!property.getValue<bool>()) {
+                        auto *player = gameObjects().findByTag<Player>("player");
+                        if (player) {
+                            Bullet::Ptr bullet = Bullet::create(*this);
+                            player->setBullet(bullet.get());
+                            gameObjects().add(std::move(bullet));
+                        }
+                    }
+                });
+            }
         }
     }
 }

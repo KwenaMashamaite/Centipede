@@ -29,12 +29,19 @@
 #include <IME/core/scene/Scene.h>
 
 namespace centpd {
+    class Player;
+
     /**
      * @brief Defines the main gameplay
      */
     class GameplayScene : public ime::Scene {
     public:
         using Ptr = std::unique_ptr<GameplayScene>; //!< Scene ptr
+
+        /**
+         * @brief Constructor
+         */
+        GameplayScene();
 
         /**
          * @brief Create a scene
@@ -58,8 +65,22 @@ namespace centpd {
          */
         void createActors();
 
+        /**
+         * @brief Create the player actor
+         */
+        void createPlayer();
+
+        /**
+         * @brief Fire the players bullet
+         * @param player The player whose bullet is to be fired
+         * @param index Where the bullet should be fired from
+         */
+        void fireBullet(Player* player, ime::Index index);
+
     private:
-        std::unique_ptr<Grid> m_grid; //!< The gameplay grid
+        std::unique_ptr<Grid> m_grid;  //!< The gameplay grid
+        ime::GridMover* m_bulletMover; //!< A bullets grid mover (There can only be one bullet at a time)
+        bool m_shouldFire;             //!< A flag indicating whether or not the player should release a bullet
     };
 }
 
