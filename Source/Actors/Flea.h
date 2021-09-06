@@ -22,32 +22,31 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef CENTIPEDE_SCORPION_H
-#define CENTIPEDE_SCORPION_H
+#ifndef CENTIPEDE_FLEA_H
+#define CENTIPEDE_FLEA_H
 
 #include <IME/core/game_object/GameObject.h>
-#include <IME/core/physics/grid/GridMover.h>
 
 namespace centpd {
     /**
-     * @brief Scorpion character
+     * @brief Flea character
      */
-    class Scorpion : public ime::GameObject {
+    class Flea : public ime::GameObject {
     public:
-        using Ptr = std::unique_ptr<Scorpion>;
+        using Ptr = std::unique_ptr<Flea>;
 
         /**
          * @brief Constructor
          * @param scene The scene the game object belongs to
          */
-        explicit Scorpion(ime::Scene &scene);
+        explicit Flea(ime::Scene &scene);
 
         /**
-         * @brief Create a Scorpion character
+         * @brief Create a Flea character
          * @param scene The scene the character belongs to
          * @return The created character
          */
-        static Scorpion::Ptr create(ime::Scene& scene);
+        static Flea::Ptr create(ime::Scene& scene);
 
         /**
          * @brief Get the name of this class in string format
@@ -55,9 +54,18 @@ namespace centpd {
          */
         std::string getClassName() const override;
 
+        /**
+         * @brief Get the number of times the flea has been hit by a Bullet
+         * @return The number of times a Bullet hot the object
+         *
+         * The flea dies if struck twice by a bullet, therefore the hit count
+         * is in the range [0, 2]. By default it is 0
+         */
+        int getHitCount() const;
+
     private:
         int m_hitCount; //!< The number of times the scorpion has been hit by a bullet
     };
 }
 
-#endif //CENTIPEDE_SCORPION_H
+#endif //CENTIPEDE_FLEA_H

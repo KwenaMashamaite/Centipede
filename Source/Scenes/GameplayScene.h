@@ -81,6 +81,11 @@ namespace centpd {
         void spawnScorpion();
 
         /**
+         * @brief Spawn a Flea character
+         */
+        void spawnFlea();
+
+        /**
          * @brief Fire the players bullet
          * @param player The player whose bullet is to be fired
          * @param index Where the bullet should be fired from
@@ -108,6 +113,7 @@ namespace centpd {
         std::unique_ptr<Grid> m_grid;      //!< The gameplay grid
         bool m_shouldFire;                 //!< A flag indicating whether or not the player should release its bullet
         int m_playerAreaHeight;            //!< The height of the player area in tiles
+        ime::Timer* m_fleaSpawnTimer;      //!< Controls when a Flea is spawned in the game
     };
 }
 

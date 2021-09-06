@@ -5,6 +5,7 @@ set(SRC_FILES
         Actors/Player.cpp
         Actors/Bullet.cpp
         Actors/Scorpion.cpp
+        Actors/Flea.cpp
         GameLoop/Game.cpp
         Scoreboard/Score.cpp
         Scoreboard/Scoreboard.cpp

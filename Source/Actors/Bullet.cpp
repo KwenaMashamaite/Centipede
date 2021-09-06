@@ -49,8 +49,12 @@ namespace centpd {
         // Destroy bullet
         onCollision([](ime::GameObject* bullet, ime::GameObject* other) {
             std::string hitObjectType = other->getClassName();
-            if (hitObjectType == "Mushroom" || hitObjectType == "Scorpion")
+            if ((hitObjectType == "Mushroom")
+                || (hitObjectType == "Scorpion")
+                || (hitObjectType == "Flea"))
+            {
                 bullet->setActive(false);
+            }
         });
     }
 

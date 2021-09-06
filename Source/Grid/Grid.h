@@ -96,6 +96,15 @@ namespace centpd {
         bool isCellOccupied(const ime::Index& index) const;
 
         /**
+         * @brief Check if a cell has a Mushroom or not
+         * @param index The index of the cell to be checked
+         * @return True if the cell contains a mushroom, otherwise false
+         *
+         * @see isCellOccupied
+         */
+        bool isMushroomInCell(const ime::Index& index) const;
+
+        /**
          * @brief Get the scene the grid belongs to
          * @return The scene the grid belongs to
          */

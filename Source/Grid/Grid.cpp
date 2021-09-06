@@ -37,6 +37,7 @@ namespace centpd {
         m_grid.renderLayers().create("Mushroom");
         m_grid.renderLayers().create("Scorpion");
         m_grid.renderLayers().create("Player");
+        m_grid.renderLayers().create("Flea");
     }
 
     ///////////////////////////////////////////////////////////////
@@ -83,6 +84,21 @@ namespace centpd {
     ///////////////////////////////////////////////////////////////
     bool Grid::isCellOccupied(const ime::Index &index) const {
         return m_grid.isTileOccupied(index);
+    }
+
+    ///////////////////////////////////////////////////////////////
+    bool Grid::isMushroomInCell(const ime::Index &index) const {
+        bool hasMushroom = false;
+        m_grid.forEachChildInTile(m_grid.getTile(index), [&hasMushroom](ime::GameObject* gameObject) {
+            // IME v2.3.0 has no way of terminating loop early :(
+            if (hasMushroom)
+                return;
+
+            if (gameObject->getClassName() == "Mushroom")
+                hasMushroom = true;
+        });
+
+        return hasMushroom;
     }
 
     ///////////////////////////////////////////////////////////////

@@ -24,8 +24,10 @@
 
 #include "Source/Scenes/GameplayScene.h"
 #include "Source/Actors/MushroomField.h"
+#include "Source/Actors/Mushroom.h"
 #include "Source/Actors/Player.h"
 #include "Source/Actors/Scorpion.h"
+#include "Source/Actors/Flea.h"
 #include <IME/core/engine/Engine.h>
 #include <IME/utility/Utils.h>
 #include <IME/core/physics/grid/KeyboardGridMover.h>
@@ -40,7 +42,8 @@ namespace centpd {
     ///////////////////////////////////////////////////////////////
     GameplayScene::GameplayScene() :
         m_shouldFire{false},
-        m_playerAreaHeight{0}
+        m_playerAreaHeight{0},
+        m_fleaSpawnTimer{nullptr}
     {}
 
     ///////////////////////////////////////////////////////////////
@@ -74,6 +77,11 @@ namespace centpd {
         // Spawn a scorpion every x minutes
         timer().setInterval(ime::minutes(1), [this] {
             spawnScorpion();
+        });
+
+        // Spawn a Flea character every x minutes
+        m_fleaSpawnTimer = &timer().setInterval(ime::minutes(1), [this] {
+            spawnFlea();
         });
 
         // Destroy inactive objects at the end of the each frame
@@ -161,6 +169,39 @@ namespace centpd {
         }
 
         createGridMover("SCORPION", scorpion, moveDirection);
+    }
+
+    ///////////////////////////////////////////////////////////////
+    void GameplayScene::spawnFlea() {
+        ime::Index spawnPos{0, ime::utility::generateRandomNum(0, static_cast<int>(m_grid->getCols()) - 1)};
+        ime::GameObject* flea = m_grid->addActor(Flea::create(*this), spawnPos);
+        ime::GridMover* fleaMover = createGridMover("FLEA", flea, ime::Down);
+
+        // A new Flea is automatically spawned if the player kills the flea we are
+        // about to spawn. Since there can only be one Flea character at a time, we
+        // pause the spawn timer and resume it only if the active flea reaches the bottom of the screen
+        m_fleaSpawnTimer->pause();
+
+        // If the flea is killed by the player, immediately spawn another one
+        flea->onPropertyChange("active", [this, flea](const ime::Property& property) {
+            auto isActive = property.getValue<bool>();
+
+            if (!isActive) {
+                if (static_cast<Flea*>(flea)->getHitCount() == 2) // Flea killed by player
+                    spawnFlea();
+                else
+                    m_fleaSpawnTimer->restart();
+            }
+        });
+
+        // Randomly spawn Mushrooms as flea descends
+        fleaMover->onAdjacentMoveEnd([this] (ime::Index index) {
+            if (index.row != m_grid->getRows() - 1) { // Mushrooms forbidden in last row
+                if (ime::utility::generateRandomNum(0, 100) >= 75 && !m_grid->isMushroomInCell(index)) {
+                    m_grid->addActor(Mushroom::create(*this), index);
+                }
+            }
+        });
     }
 
     ///////////////////////////////////////////////////////////////

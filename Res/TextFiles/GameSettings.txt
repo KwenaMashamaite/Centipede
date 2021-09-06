@@ -43,3 +43,6 @@ BULLET_SPEED:FLOAT=120
 
 # The speed of the Scorpion character
 SCORPION_SPEED:FLOAT=120
+
+# The speed of the Flea character
+FLEA_SPEED:FLOAT=120
