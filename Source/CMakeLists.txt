@@ -4,6 +4,7 @@ set(SRC_FILES
         Actors/MushroomField.cpp
         Actors/Player.cpp
         Actors/Bullet.cpp
+        Actors/Scorpion.cpp
         GameLoop/Game.cpp
         Scoreboard/Score.cpp
         Scoreboard/Scoreboard.cpp

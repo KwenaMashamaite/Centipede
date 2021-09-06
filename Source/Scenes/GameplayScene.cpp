@@ -25,18 +25,22 @@
 #include "Source/Scenes/GameplayScene.h"
 #include "Source/Actors/MushroomField.h"
 #include "Source/Actors/Player.h"
+#include "Source/Actors/Scorpion.h"
 #include <IME/core/engine/Engine.h>
+#include <IME/utility/Utils.h>
 #include <IME/core/physics/grid/KeyboardGridMover.h>
+#include <cassert>
 
 namespace centpd {
+    ///////////////////////////////////////////////////////////////
     namespace {
         const unsigned int TILE_SIZE = 16;
     }
 
     ///////////////////////////////////////////////////////////////
     GameplayScene::GameplayScene() :
-        m_bulletMover{nullptr},
-        m_shouldFire{false}
+        m_shouldFire{false},
+        m_playerAreaHeight{0}
     {}
 
     ///////////////////////////////////////////////////////////////
@@ -46,27 +50,13 @@ namespace centpd {
 
     ///////////////////////////////////////////////////////////////
     void GameplayScene::onInit() {
+        m_playerAreaHeight = sCache().getPref("PLAYER_AREA_HEIGHT").getValue<int>();
+
         // Create the grid
         createTilemap(TILE_SIZE, TILE_SIZE);
         m_grid = std::make_unique<Grid>(tilemap(), gameObjects());
         ime::Vector2u windowSize = engine().getWindow().getSize();
         m_grid->create( windowSize.y / TILE_SIZE - ((m_grid->getRows() + 2) % TILE_SIZE), windowSize.x / TILE_SIZE - ((m_grid->getCols() + 3) % TILE_SIZE));
-
-        // Create the bullets grid mover
-        m_bulletMover = gridMovers().addObject(ime::GridMover::create(tilemap()));
-        auto bulletSpeed = sCache().getPref("BULLET_SPEED").getValue<float>();
-        m_bulletMover->setMaxLinearSpeed(ime::Vector2f{bulletSpeed, bulletSpeed});
-        m_bulletMover->setMovementRestriction(ime::GridMover::MoveRestriction::Vertical);
-
-        // Destroy bullet when it hits the top grid border
-        m_bulletMover->onGridBorderCollision([this]{
-            m_bulletMover->getTarget()->setActive(false);
-        });
-
-        // Keep the bullet moving up
-        m_bulletMover->onAdjacentMoveEnd([this](ime::Index) {
-            m_bulletMover->requestDirectionChange(ime::Up);
-        });
 
         // Destroy inactive objects
         engine().onFrameEnd([this] {
@@ -80,8 +70,8 @@ namespace centpd {
     void GameplayScene::onEnter() {
         createActors();
 
-        // Limit the player to a small section at the bottom of the grid
-        const int row = (static_cast<int>(m_grid->getRows()) - 1) - sCache().getPref("PLAYER_AREA_HEIGHT").getValue<int>();
+        // Divide the grid into two sections (Upper and lower half)
+        const int row = (static_cast<int>(m_grid->getRows()) - 1) - m_playerAreaHeight;
         for (int col = 0; col < m_grid->getCols(); col++) {
             auto wall = ime::GameObject::create(*this);
             wall->setAsObstacle(true);
@@ -89,7 +79,7 @@ namespace centpd {
             m_grid->addActor(std::move(wall), ime::Index{row, col});
         }
 
-        // Shoot bullet
+        // Shoot a bullet when the player presses space
         input().onKeyDown([this](ime::Keyboard::Key key) {
             if (key == ime::Keyboard::Key::Space) {
                 m_shouldFire = true;
@@ -98,6 +88,11 @@ namespace centpd {
                 if (!playerMover->isTargetMoving())
                     fireBullet(gameObjects().findByTag<Player>("player"), playerMover->getCurrentTileIndex());
             }
+        });
+
+        // Spawn a scorpion every x minutes
+        timer().setInterval(ime::minutes(1), [this] {
+            spawnScorpion();
         });
     }
 
@@ -137,14 +132,38 @@ namespace centpd {
     }
 
     ///////////////////////////////////////////////////////////////
+    void GameplayScene::spawnScorpion() {
+        // The scorpion and the player do not interact directly, i.e. it must not enter the player area
+        int row = ime::utility::generateRandomNum(0,(static_cast<int>(m_grid->getRows()) - 1) - m_playerAreaHeight);
+
+        int colm;
+        ime::Vector2i moveDirection;
+        if (ime::utility::generateRandomNum(0, 1) == 0) { // Spawn from the left of the screen
+            colm = 0;
+            moveDirection = ime::Right;
+        } else { // Spawn from the right of the screen
+            colm = static_cast<int>(m_grid->getCols() - 1);
+            moveDirection = ime::Left;
+        }
+
+        ime::GameObject* scorpion = m_grid->addActor(Scorpion::create(*this), ime::Index{row, colm});
+
+
+        if (moveDirection == ime::Right) {
+            // Horizontally flip the scorpion texture, by default the texture is facing left
+            scorpion->getSprite().scale(-1.0f, 1.0f);
+        }
+
+        createGridMover("SCORPION", scorpion, moveDirection);
+    }
+
+    ///////////////////////////////////////////////////////////////
     void GameplayScene::fireBullet(Player* player, ime::Index index) {
         if (m_shouldFire) {
             m_shouldFire = false;
             if (player->canShoot()) {
                 Bullet *bullet = player->shoot();
                 m_grid->addActor(bullet, index);
-                m_bulletMover->setTarget(bullet);
-                m_bulletMover->requestDirectionChange(ime::Up);
 
                 // Give the player another bullet, when this one is destroyed
                 bullet->onPropertyChange("active", [this](const ime::Property& property) {
@@ -157,7 +176,44 @@ namespace centpd {
                         }
                     }
                 });
+
+                // Create the bullet mover, at this point it no longer moves with the player
+                createGridMover("BULLET", bullet, ime::Up);
             }
         }
+    }
+
+    ///////////////////////////////////////////////////////////////
+    ime::GridMover* GameplayScene::createGridMover(const std::string& objType, ime::GameObject* target, ime::Vector2i dir) {
+        assert(target && "A grid mover target cannot be a nullptr");
+        ime::GridMover* gridMover = gridMovers().addObject(ime::GridMover::create(tilemap(), target));
+        auto speed = sCache().getPref(objType + "_SPEED").getValue<float>(); // e.g BULLET_SPEED, SCORPION_SPEED etc
+        gridMover->setMaxLinearSpeed(ime::Vector2f{speed, speed});
+
+        // Automatically destroy the grid mover when its target gets destroyed
+        target->onDestruction([gridMover, this] {
+            gridMovers().removeById(gridMover->getObjectId());
+        });
+
+        if (dir != ime::Unknown) {
+            // Automatically move the target to the next adjacent cell
+            gridMover->onAdjacentMoveEnd([gridMover, dir](ime::Index) {
+                gridMover->requestDirectionChange(dir);
+            });
+
+            // Start the movement
+            gridMover->requestDirectionChange(dir);
+        }
+
+        // Actors other than the player are destroyed when attempting to move
+        // beyond the bounds of the grid. This means they have moved outside
+        // the player area
+        if (objType != "PLAYER") {
+            gridMover->onGridBorderCollision([gridMover] {
+                gridMover->getTarget()->setActive(false);
+            });
+        }
+
+        return gridMover;
     }
 }

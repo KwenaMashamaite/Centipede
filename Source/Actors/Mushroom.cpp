@@ -44,8 +44,10 @@ namespace centpd {
         setCollisionGroup("mushroom");
         setAsObstacle(true);
 
-        // This makes a bullet generate a collision event only after it has
-        // occupied the same tile as the mushroom
+        // Since a mushroom is an obstacle object, by default, other objects
+        // cannot overlap with it. However, Scorpions and Bullets must be able
+        // to collide with it by overlapping
+        getObstacleCollisionFilter().add("scorpion");
         getObstacleCollisionFilter().add("bullet");
 
         // Set initial mushroom (full) texture

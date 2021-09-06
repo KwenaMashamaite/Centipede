@@ -40,3 +40,6 @@ PLAYER_AREA_HEIGHT:INT=6
 
 # The speed of the players bullet
 BULLET_SPEED:FLOAT=120
+
+# The speed of the Scorpion character
+SCORPION_SPEED:FLOAT=120

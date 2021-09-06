@@ -71,16 +71,38 @@ namespace centpd {
         void createPlayer();
 
         /**
+         * @brief Spawn a Scorpion
+         */
+        void spawnScorpion();
+
+        /**
          * @brief Fire the players bullet
          * @param player The player whose bullet is to be fired
          * @param index Where the bullet should be fired from
+         *
+         * The bullet will only be fired if there is no active bullet (previously
+         * fired) in the game
          */
         void fireBullet(Player* player, ime::Index index);
 
+        /**
+         * @brief Create a grid mover for a character
+         * @param objType The type of the grid mover target in caps (e.g BULLET, PLAYER, SCORPION)
+         * @param target The character to be moved by the grid mover
+         * @param dir The direction in which the target moves in
+         * @return A grid mover initialized for the specified character
+         *
+         * Note that @a dir is specified by characters that only move in
+         * one direction until the end of their lifetime (e.g. a Bullet
+         * always moves upwards until it is destroyed)
+         */
+        ime::GridMover* createGridMover(const std::string& objType, ime::GameObject* target,
+            ime::Vector2i dir = ime::Unknown);
+
     private:
-        std::unique_ptr<Grid> m_grid;  //!< The gameplay grid
-        ime::GridMover* m_bulletMover; //!< A bullets grid mover (There can only be one bullet at a time)
-        bool m_shouldFire;             //!< A flag indicating whether or not the player should release a bullet
+        std::unique_ptr<Grid> m_grid;      //!< The gameplay grid
+        bool m_shouldFire;                 //!< A flag indicating whether or not the player should release its bullet
+        int m_playerAreaHeight;            //!< The height of the player area in tiles
     };
 }
 
