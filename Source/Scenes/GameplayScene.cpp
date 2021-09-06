@@ -51,40 +51,21 @@ namespace centpd {
     ///////////////////////////////////////////////////////////////
     void GameplayScene::onInit() {
         m_playerAreaHeight = sCache().getPref("PLAYER_AREA_HEIGHT").getValue<int>();
-
-        // Create the grid
-        createTilemap(TILE_SIZE, TILE_SIZE);
-        m_grid = std::make_unique<Grid>(tilemap(), gameObjects());
-        ime::Vector2u windowSize = engine().getWindow().getSize();
-        m_grid->create( windowSize.y / TILE_SIZE - ((m_grid->getRows() + 2) % TILE_SIZE), windowSize.x / TILE_SIZE - ((m_grid->getCols() + 3) % TILE_SIZE));
-
-        // Destroy inactive objects
-        engine().onFrameEnd([this] {
-            gameObjects().removeIf([](const ime::GameObject* actor) {
-                return !actor->isActive();
-            });
-        });
+        createGrid();
     }
 
     ///////////////////////////////////////////////////////////////
     void GameplayScene::onEnter() {
         createActors();
 
-        // Divide the grid into two sections (Upper and lower half)
-        const int row = (static_cast<int>(m_grid->getRows()) - 1) - m_playerAreaHeight;
-        for (int col = 0; col < m_grid->getCols(); col++) {
-            auto wall = ime::GameObject::create(*this);
-            wall->setAsObstacle(true);
-            wall->setCollisionGroup("invisibleWall");
-            m_grid->addActor(std::move(wall), ime::Index{row, col});
-        }
-
-        // Shoot a bullet when the player presses space
+        // Shoot the players bullet when the user presses the shoot key
         input().onKeyDown([this](ime::Keyboard::Key key) {
             if (key == ime::Keyboard::Key::Space) {
                 m_shouldFire = true;
 
                 ime::GridMover* playerMover = gridMovers().findByTag("playerMover");
+                // The bullet must also be in the grid, if shot while the player is
+                // moving, it will not come out of the player as the player may be between grid cells
                 if (!playerMover->isTargetMoving())
                     fireBullet(gameObjects().findByTag<Player>("player"), playerMover->getCurrentTileIndex());
             }
@@ -94,6 +75,32 @@ namespace centpd {
         timer().setInterval(ime::minutes(1), [this] {
             spawnScorpion();
         });
+
+        // Destroy inactive objects at the end of the each frame
+        engine().onFrameEnd([this] {
+            gameObjects().removeIf([](const ime::GameObject* actor) {
+                return !actor->isActive();
+            });
+        });
+    }
+
+    ///////////////////////////////////////////////////////////////
+    void GameplayScene::createGrid() {
+        createTilemap(TILE_SIZE, TILE_SIZE);
+        m_grid = std::make_unique<Grid>(tilemap(), gameObjects());
+        ime::Vector2u windowSize = engine().getWindow().getSize();
+        m_grid->create( windowSize.y / TILE_SIZE - ((m_grid->getRows() + 2) % TILE_SIZE), windowSize.x / TILE_SIZE - ((m_grid->getCols() + 3) % TILE_SIZE));
+
+        // Divide the grid into two sections (top and bottom) with invisible obstacles.
+        // However, note that only the Player character can collide with these invisible
+        // walls, other characters will simply pass through them like they are not there
+        const int row = (static_cast<int>(m_grid->getRows()) - 1) - m_playerAreaHeight;
+        for (int col = 0; col < m_grid->getCols(); col++) {
+            auto wall = ime::GameObject::create(*this);
+            wall->setAsObstacle(true);
+            wall->setCollisionGroup("invisibleWall");
+            m_grid->addActor(std::move(wall), ime::Index{row, col});
+        }
     }
 
     ///////////////////////////////////////////////////////////////
@@ -147,7 +154,6 @@ namespace centpd {
         }
 
         ime::GameObject* scorpion = m_grid->addActor(Scorpion::create(*this), ime::Index{row, colm});
-
 
         if (moveDirection == ime::Right) {
             // Horizontally flip the scorpion texture, by default the texture is facing left

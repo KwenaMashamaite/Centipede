@@ -61,6 +61,11 @@ namespace centpd {
 
     private:
         /**
+         * @brief Create the gameplay grid
+         */
+        void createGrid();
+
+        /**
          * @brief Create game objects
          */
         void createActors();
