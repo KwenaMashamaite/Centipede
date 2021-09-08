@@ -37,7 +37,7 @@ namespace centpd {
     {
         // Initialized shared mushroom textures
         if (!m_isSpriteSheetCreated) {
-            m_spriteSheet.create("Spritesheet.png",ime::Vector2u{8, 8}, ime::Vector2u{0, 0}, ime::UIntRect{64, 0, 32, 16});
+            m_spriteSheet.create("Spritesheet.png",ime::Vector2u{8, 8}, ime::Vector2u{0, 0}, ime::UIntRect{65, 0, 32, 16});
             m_isSpriteSheetCreated = true;
         }
 

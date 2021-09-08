@@ -38,7 +38,7 @@ namespace centpd {
         getCollisionExcludeList().add("mushroom");
         getCollisionExcludeList().add("scorpion");
 
-        static auto spritesheet = ime::SpriteSheet("Spritesheet.png", ime::Vector2u{9, 8}, ime::Vector2u{0, 0}, ime::UIntRect{64, 32, 9, 32});
+        static auto spritesheet = ime::SpriteSheet("Spritesheet.png", ime::Vector2u{9, 8}, ime::Vector2u{0, 0}, ime::UIntRect{65, 32, 9, 32});
 
         // Init default texture
         ime::Sprite& sprite = getSprite();

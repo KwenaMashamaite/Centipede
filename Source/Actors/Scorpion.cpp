@@ -34,7 +34,7 @@ namespace centpd {
         setCollisionGroup("scorpion");
         getCollisionExcludeList().add("invisibleWall");
 
-        static auto spritesheet = ime::SpriteSheet("Spritesheet.png", ime::Vector2u{16, 8}, ime::Vector2u{0, 0}, ime::UIntRect{0, 55, 64, 8});
+        static auto spritesheet = ime::SpriteSheet("Spritesheet.png", ime::Vector2u{16, 8}, ime::Vector2u{0, 0}, ime::UIntRect{1, 55, 64, 8});
 
         // Init default texture
         ime::Sprite& sprite = getSprite();

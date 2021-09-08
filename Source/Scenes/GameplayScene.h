@@ -76,6 +76,11 @@ namespace centpd {
         void createPlayer();
 
         /**
+         * @brief Create a Centipede
+         */
+        void createCentipede();
+
+        /**
          * @brief Spawn a Scorpion
          */
         void spawnScorpion();

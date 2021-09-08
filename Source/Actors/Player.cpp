@@ -38,7 +38,7 @@ namespace centpd {
 
         ime::Sprite& sprite = getSprite();
         sprite.setTexture("Spritesheet.png");
-        sprite.setTextureRect(ime::UIntRect{0, 80, 7, 8});
+        sprite.setTextureRect(ime::UIntRect{1, 80, 7, 8});
         resetSpriteOrigin();
         sprite.scale(2.0f, 2.0f);
     }

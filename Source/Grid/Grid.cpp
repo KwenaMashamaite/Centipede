@@ -35,6 +35,7 @@ namespace centpd {
         m_grid.renderLayers().create("GameObject"); // ime::GameObject instances go to this layer
         m_grid.renderLayers().create("Bullet");
         m_grid.renderLayers().create("Mushroom");
+        m_grid.renderLayers().create("CentipedeSegment");
         m_grid.renderLayers().create("Scorpion");
         m_grid.renderLayers().create("Player");
         m_grid.renderLayers().create("Flea");

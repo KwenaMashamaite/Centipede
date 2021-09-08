@@ -38,7 +38,7 @@ namespace centpd {
 
         ime::Sprite& sprite = getSprite();
         sprite.setTexture("Spritesheet.png");
-        sprite.setTextureRect(ime::UIntRect{11, 80, 1, 6});
+        sprite.setTextureRect(ime::UIntRect{12, 80, 1, 6});
         resetSpriteOrigin();
         sprite.scale(2.0f, 2.0f);
 
@@ -51,7 +51,8 @@ namespace centpd {
             std::string hitObjectType = other->getClassName();
             if ((hitObjectType == "Mushroom")
                 || (hitObjectType == "Scorpion")
-                || (hitObjectType == "Flea"))
+                || (hitObjectType == "Flea")
+                || (hitObjectType == "CentipedeSegment"))
             {
                 bullet->setActive(false);
             }

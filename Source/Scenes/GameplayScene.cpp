@@ -28,6 +28,8 @@
 #include "Source/Actors/Player.h"
 #include "Source/Actors/Scorpion.h"
 #include "Source/Actors/Flea.h"
+#include "Source/Actors/CentipedeSegment.h"
+#include "Source/Common/Constants.h"
 #include <IME/core/engine/Engine.h>
 #include <IME/utility/Utils.h>
 #include <IME/core/physics/grid/KeyboardGridMover.h>
@@ -54,6 +56,8 @@ namespace centpd {
     ///////////////////////////////////////////////////////////////
     void GameplayScene::onInit() {
         m_playerAreaHeight = sCache().getPref("PLAYER_AREA_HEIGHT").getValue<int>();
+        Constants::PLAYER_AREA_HEIGHT = m_playerAreaHeight;
+
         createGrid();
     }
 
@@ -124,6 +128,10 @@ namespace centpd {
 
         if (sCache().getPref("ENABLE_PLAYER").getValue<bool>())
             createPlayer();
+
+        if (sCache().getPref("ENABLE_CENTIPEDES").getValue<bool>()) {
+            createCentipede();
+        }
     }
 
     ///////////////////////////////////////////////////////////////
@@ -153,6 +161,14 @@ namespace centpd {
         });
 
         gridMovers().addObject(std::move(playerMover));
+    }
+
+    ///////////////////////////////////////////////////////////////
+    void GameplayScene::createCentipede() {
+        auto startPos = ime::Index{0, static_cast<int>((m_grid->getCols() - 1) / 2)};
+        ime::GameObject* head = m_grid->addActor(CentipedeSegment::create(*this, CentipedeSegment::Type::Head), startPos);
+        ime::GridMover* gridMover = createGridMover("CENTIPEDE", head);
+        static_cast<CentipedeSegment*>(head)->setGridMover(gridMover);
     }
 
     ///////////////////////////////////////////////////////////////
@@ -264,10 +280,8 @@ namespace centpd {
             gridMover->requestDirectionChange(dir);
         }
 
-        // Actors other than the player are destroyed when attempting to move
-        // beyond the bounds of the grid. This means they have moved outside
-        // the player area
-        if (objType != "PLAYER") {
+        // Some actors are destroyed when the reach the other side of the grid
+        if (objType != "PLAYER" && objType != "CENTIPEDE") {
             gridMover->onGridBorderCollision([gridMover] {
                 gridMover->getTarget()->setActive(false);
             });
