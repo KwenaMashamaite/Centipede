@@ -46,3 +46,21 @@ SCORPION_SPEED:FLOAT=120
 
 # The speed of the Flea character
 FLEA_SPEED:FLOAT=120
+
+# An option indicating whether or not the Player appears in the game
+ENABLE_PLAYER:BOOL=1
+
+# An option indicating whether or not Mushrooms appear in the game
+ENABLE_MUSHROOMS:BOOL=1
+
+# An option indicating whether or not Scorpions can appear in the game
+ENABLE_SCORPIONS:BOOL=1
+
+# An option indicating whether or not Fleas can appear in the game
+ENABLE_FLEAS:BOOL=1
+
+# Specifies the spawn interval of Fleas in seconds
+FLEA_SPAWN_INTERVAL:FLOAT=30
+
+# Specifies the spawn interval of Scorpions in seconds
+SCORPION_SPAWN_INTERVAL:FLOAT=150

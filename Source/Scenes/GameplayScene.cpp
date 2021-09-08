@@ -61,28 +61,34 @@ namespace centpd {
     void GameplayScene::onEnter() {
         createActors();
 
-        // Shoot the players bullet when the user presses the shoot key
-        input().onKeyDown([this](ime::Keyboard::Key key) {
-            if (key == ime::Keyboard::Key::Space) {
-                m_shouldFire = true;
+        if (sCache().getPref("ENABLE_PLAYER").getValue<bool>()) {
+            // Shoot the players bullet when the user presses the shoot key
+            input().onKeyDown([this](ime::Keyboard::Key key) {
+                if (key == ime::Keyboard::Key::Space) {
+                    m_shouldFire = true;
 
-                ime::GridMover* playerMover = gridMovers().findByTag("playerMover");
-                // The bullet must also be in the grid, if shot while the player is
-                // moving, it will not come out of the player as the player may be between grid cells
-                if (!playerMover->isTargetMoving())
-                    fireBullet(gameObjects().findByTag<Player>("player"), playerMover->getCurrentTileIndex());
-            }
-        });
+                    ime::GridMover* playerMover = gridMovers().findByTag("playerMover");
+                    // The bullet must also be in the grid, if shot while the player is
+                    // moving, it will not come out of the player as the player may be between grid cells
+                    if (!playerMover->isTargetMoving())
+                        fireBullet(gameObjects().findByTag<Player>("player"), playerMover->getCurrentTileIndex());
+                }
+            });
+        }
 
-        // Spawn a scorpion every x minutes
-        timer().setInterval(ime::minutes(1), [this] {
-            spawnScorpion();
-        });
+        if (sCache().getPref("ENABLE_SCORPIONS").getValue<bool>()) {
+            auto scorpionSpawnInterval = sCache().getPref("SCORPION_SPAWN_INTERVAL").getValue<float>();
+            timer().setInterval(ime::seconds(scorpionSpawnInterval), [this] {
+                spawnScorpion();
+            });
+        }
 
-        // Spawn a Flea character every x minutes
-        m_fleaSpawnTimer = &timer().setInterval(ime::minutes(1), [this] {
-            spawnFlea();
-        });
+        if (sCache().getPref("ENABLE_FLEAS").getValue<bool>()) {
+            auto fleaSpawnInterval = sCache().getPref("FLEA_SPAWN_INTERVAL").getValue<float>();
+            m_fleaSpawnTimer = &timer().setInterval(ime::seconds(fleaSpawnInterval), [this] {
+                spawnFlea();
+            });
+        }
 
         // Destroy inactive objects at the end of the each frame
         engine().onFrameEnd([this] {
@@ -113,8 +119,11 @@ namespace centpd {
 
     ///////////////////////////////////////////////////////////////
     void GameplayScene::createActors() {
-        MushroomField::create(*m_grid, sCache().getPref("NUM_MUSHROOMS").getValue<unsigned int>());
-        createPlayer();
+        if (sCache().getPref("ENABLE_MUSHROOMS").getValue<bool>())
+            MushroomField::create(*m_grid, sCache().getPref("NUM_MUSHROOMS").getValue<unsigned int>());
+
+        if (sCache().getPref("ENABLE_PLAYER").getValue<bool>())
+            createPlayer();
     }
 
     ///////////////////////////////////////////////////////////////
@@ -194,14 +203,17 @@ namespace centpd {
             }
         });
 
-        // Randomly spawn Mushrooms as flea descends
-        fleaMover->onAdjacentMoveEnd([this] (ime::Index index) {
-            if (index.row != m_grid->getRows() - 1) { // Mushrooms forbidden in last row
-                if (ime::utility::generateRandomNum(0, 100) >= 75 && !m_grid->isMushroomInCell(index)) {
-                    m_grid->addActor(Mushroom::create(*this), index);
+        static const bool isMushroomsEnabled = sCache().getPref("ENABLE_MUSHROOMS").getValue<bool>();
+        if (isMushroomsEnabled) {
+            // Randomly spawn Mushrooms as flea descends
+            fleaMover->onAdjacentMoveEnd([this] (ime::Index index) {
+                if (index.row != m_grid->getRows() - 1) { // Mushrooms forbidden in last row
+                    if (ime::utility::generateRandomNum(0, 100) >= 75 && !m_grid->isMushroomInCell(index)) {
+                        m_grid->addActor(Mushroom::create(*this), index);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     ///////////////////////////////////////////////////////////////
