@@ -77,10 +77,15 @@ namespace centpd {
         void setGridMover(ime::GridMover* gridMover);
 
         /**
-         * @brief Get the segment grid mover
-         * @return The segments grid mover
+         * @brief Attach a segment to this segment
+         * @param segment The segment to be attached
+         *
+         * This function works like how a chain works, you attachSegment one
+         * piece to another which can be attached to another piece and
+         * so on, essentially forming a chain of CentipedeSegments which
+         * become a centipede
          */
-        ime::GridMover* getGridMover();
+        void attachSegment(CentipedeSegment* segment);
 
         /**
          * @brief Set the direction of the segment
@@ -103,8 +108,9 @@ namespace centpd {
     private:
         /**
          * @brief Create the segments movement animations
+         * @brief type The type of the segment
          */
-        void createAnimation();
+        void createAnimation(Type type);
 
         /**
          * @brief Move up or down by one row
@@ -115,6 +121,11 @@ namespace centpd {
          * @brief Check if segment should descend or ascend then update
          */
         void updateVerticalMovement();
+
+        /**
+         * @brief Update the segments animation
+         */
+        void updateAnimation();
 
     private:
         Type m_type;                 //!< Head or body

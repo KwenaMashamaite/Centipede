@@ -33,7 +33,7 @@ namespace centpd {
         // Prevent an infinite loop - A cell can only be occupied by one mushroom (And the player must not be blocked in its starting row (bottom row))
         assert(numMushrooms <= grid.getRows() * grid.getCols() - grid.getCols() && "The number of mushrooms must be one row less than the number of cells");
 
-        auto randomRowGenerator = ime::utility::createRandomNumGenerator(0, grid.getRows() - 2); // Subtract 2 to exclude the player row (bottom)
+        auto randomRowGenerator = ime::utility::createRandomNumGenerator(1, grid.getRows() - 2); // No mushrooms in first and last rows
         auto randomColGenerator = ime::utility::createRandomNumGenerator(0, grid.getCols() - 1);
 
         while (numMushrooms > 0) {

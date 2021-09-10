@@ -66,7 +66,7 @@ ENABLE_FLEAS:BOOL=1
 ENABLE_CENTIPEDES:BOOL=1
 
 # Specifies the initial length of the centipede (size limited by grid size)
-CENTIPEDE_LENGTH:UINT=6
+CENTIPEDE_LENGTH:UINT=18
 
 # Specifies the spawn interval of Fleas in seconds
 FLEA_SPAWN_INTERVAL:FLOAT=30

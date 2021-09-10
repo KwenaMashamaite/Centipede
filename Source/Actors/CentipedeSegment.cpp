@@ -52,8 +52,9 @@ namespace centpd {
         sprite.setScale(2.0f, 2.0f);
 
         // Init animations
-        createAnimation();
-        setDirection(ime::Left);
+        createAnimation(Type::Head);
+        createAnimation(Type::Body);
+        setDirection(ime::Right);
 
         // Init collision handlers
         onCollision([this](ime::GameObject*, ime::GameObject* other) {
@@ -90,7 +91,7 @@ namespace centpd {
 
         // Keep segment moving in its current direction
         m_gridMover->onAdjacentMoveEnd([this](ime::Index index) {
-            if (!m_isSwitchingRows)
+            if (!m_isSwitchingRows /*&& m_type == Type::Head*/)
                 m_gridMover->requestDirectionChange(m_dir);
         });
 
@@ -106,46 +107,33 @@ namespace centpd {
     }
 
     ///////////////////////////////////////////////////////////////
-    ime::GridMover *CentipedeSegment::getGridMover() {
-        return m_gridMover;
+    void CentipedeSegment::attachSegment(CentipedeSegment *segment) {
+        assert(segment && "A nullptr cannot be attached to a CentipedeSegment");
+        if (m_link && this->isSameObjectAs(*segment))
+            return;
+        else {
+            m_link = segment;
+            m_link->setType(Type::Body);
+
+            m_link->onDestruction([this] {
+                m_link = nullptr;
+            });
+
+            onPropertyChange("active", [this](const ime::Property& property) {
+                auto isActive = property.getValue<bool>();
+                if (!isActive && m_link) {
+                    m_link->setType(Type::Head);
+                    m_link->updateAnimation();
+                }
+            });
+        }
     }
 
     ///////////////////////////////////////////////////////////////
     void CentipedeSegment::setDirection(const ime::Vector2i &dir) {
         if (m_dir != dir) {
             m_dir = dir;
-
-            ime::Sprite& sprite = getSprite();
-            ime::Animator& animator = sprite.getAnimator();
-
-            // Note: The animation texture has one directional frames only (By default
-            // On the texture, the centipede is facing left for horizontal movement,
-            // facing down for vertical movement and facing down-left for diagonal
-            // movement. So we have to flip the texture horizontally, vertically or
-            // both to get the other directions
-
-            // Reset the texture to the default orientation, so we can flip it properly below.
-            auto [xScale, yScale] = sprite.getScale();
-            sprite.scale(xScale < 0.0f ? -1.0f : 1.0f, yScale < 0.0f ? -1.0f : 1.0f);
-
-            // Update animation
-            if (dir == ime::Left || dir == ime::Right) {
-                animator.startAnimation("movingHor");
-                if (dir == ime::Right)
-                    sprite.scale(-1.0f, 1.0f);
-            } else if (dir == ime::Up || dir == ime::Down) {
-                animator.startAnimation("movingVert");
-                if (dir == ime::Up)
-                    sprite.scale(1.0f, -1.0f);
-            } else {
-                animator.startAnimation("movingDiag");
-                if (dir == ime::DownRight)
-                    sprite.scale(-1.0f, 1.0f);
-                else if (dir == ime::UpLeft)
-                    sprite.scale(1.0f, -1.0f);
-                else if (dir == ime::UpRight)
-                    sprite.scale(-1.0f, -1.0f);
-            }
+            updateAnimation();
         }
     }
 
@@ -199,33 +187,68 @@ namespace centpd {
     }
 
     ///////////////////////////////////////////////////////////////
-    void CentipedeSegment::createAnimation() {
+    void CentipedeSegment::updateAnimation() {
+        ime::Sprite& sprite = getSprite();
+        ime::Animator& animator = sprite.getAnimator();
+
+        // Note: The animation texture has one directional frames only (By default
+        // On the texture, the centipede is facing left for horizontal movement,
+        // facing down for vertical movement and facing down-left for diagonal
+        // movement. So we have to flip the texture horizontally, vertically or
+        // both to get the other directions
+
+        // Reset the texture to the default orientation, so we can flip it properly below.
+        auto [xScale, yScale] = sprite.getScale();
+        sprite.scale(xScale < 0.0f ? -1.0f : 1.0f, yScale < 0.0f ? -1.0f : 1.0f);
+
+        // Update animation
+        if (m_dir == ime::Left || m_dir == ime::Right) {
+            animator.startAnimation(std::string("movingHor") + ((m_type == Type::Head) ? "Head" : "Body"));
+            if (m_dir == ime::Right)
+                sprite.scale(-1.0f, 1.0f);
+        } else if (m_dir == ime::Up || m_dir == ime::Down) {
+            animator.startAnimation(std::string("movingVert") + ((m_type == Type::Head) ? "Head" : "Body"));
+            if (m_dir == ime::Up)
+                sprite.scale(1.0f, -1.0f);
+        } else {
+            animator.startAnimation(std::string("movingDiag") + ((m_type == Type::Head) ? "Head" : "Body"));
+            if (m_dir == ime::DownRight)
+                sprite.scale(-1.0f, 1.0f);
+            else if (m_dir == ime::UpLeft)
+                sprite.scale(1.0f, -1.0f);
+            else if (m_dir == ime::UpRight)
+                sprite.scale(-1.0f, -1.0f);
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////
+    void CentipedeSegment::createAnimation(Type type) {
         ime::Sprite& sprite = getSprite();
 
         // Horizontal movement animations
         static auto horSpritesheet = ime::SpriteSheet("Spritesheet.png", ime::Vector2u{7, 8}, ime::Vector2u{1, 0}, ime::UIntRect{0, 0, 33, 32});
-        ime::Animation::Ptr horMoveAnim = ime::Animation::create("movingHor", horSpritesheet, ime::milliseconds(200));
-        horMoveAnim->addFrame(ime::Index{m_type == Type::Head ? 0 : 2, 3});
-        horMoveAnim->addFrame(ime::Index{m_type == Type::Head ? 1 : 3, 3});
-        horMoveAnim->addFrame(ime::Index{m_type == Type::Head ? 0 : 2, 2});
-        horMoveAnim->addFrame(ime::Index{m_type == Type::Head ? 1 : 3, 1});
-        horMoveAnim->addFrame(ime::Index{m_type == Type::Head ? 0 : 2, 1});
+        ime::Animation::Ptr horMoveAnim = ime::Animation::create(std::string("movingHor") + ((type == Type::Head) ? "Head" : "Body"), horSpritesheet, ime::milliseconds(200));
+        horMoveAnim->addFrame(ime::Index{type == Type::Head ? 0 : 2, 3});
+        horMoveAnim->addFrame(ime::Index{type == Type::Head ? 1 : 3, 3});
+        horMoveAnim->addFrame(ime::Index{type == Type::Head ? 0 : 2, 2});
+        horMoveAnim->addFrame(ime::Index{type == Type::Head ? 1 : 3, 1});
+        horMoveAnim->addFrame(ime::Index{type == Type::Head ? 0 : 2, 1});
         horMoveAnim->setLoop(true);
         sprite.getAnimator().addAnimation(std::move(horMoveAnim));
 
         // Diagonal animations
         static auto diagSpritesheet = ime::SpriteSheet("Spritesheet.png", ime::Vector2u{8, 8}, ime::Vector2u{0, 0}, ime::UIntRect{33, 0, 8, 32});
-        ime::Animation::Ptr diaMoveAnim = ime::Animation::create("movingDiag", diagSpritesheet, ime::milliseconds(200));
-        diaMoveAnim->addFrames(ime::Index{m_type == Type::Head ? 0 : 2, 0}, 2, ime::FrameArrangement::Vertical);
+        ime::Animation::Ptr diaMoveAnim = ime::Animation::create(std::string("movingDiag") + ((type == Type::Head) ? "Head" : "Body"), diagSpritesheet, ime::milliseconds(200));
+        diaMoveAnim->addFrames(ime::Index{type == Type::Head ? 0 : 2, 0}, 2, ime::FrameArrangement::Vertical);
         diaMoveAnim->setLoop(true);
         sprite.getAnimator().addAnimation(std::move(diaMoveAnim));
 
         // Vertical animations
         static auto vertSpritesheet = ime::SpriteSheet("Spritesheet.png", ime::Vector2u{8, 7}, ime::Vector2u{0, 0}, ime::UIntRect{49, 1, 16, 28});
-        ime::Animation::Ptr vertMoveAnim = ime::Animation::create("movingVert", vertSpritesheet, ime::milliseconds(200));
-        vertMoveAnim->addFrame(ime::Index{m_type == Type::Head ? 1 : 3, 1});
-        vertMoveAnim->addFrame(ime::Index{m_type == Type::Head ? 0 : 2, 1});
-        vertMoveAnim->addFrame(ime::Index{m_type == Type::Head ? 1 : 3, 0});
+        ime::Animation::Ptr vertMoveAnim = ime::Animation::create(std::string("movingVert") + ((type == Type::Head) ? "Head" : "Body"), vertSpritesheet, ime::milliseconds(200));
+        vertMoveAnim->addFrame(ime::Index{type == Type::Head ? 1 : 3, 1});
+        vertMoveAnim->addFrame(ime::Index{type == Type::Head ? 0 : 2, 1});
+        vertMoveAnim->addFrame(ime::Index{type == Type::Head ? 1 : 3, 0});
         vertMoveAnim->setLoop(true);
         sprite.getAnimator().addAnimation(std::move(vertMoveAnim));
     }

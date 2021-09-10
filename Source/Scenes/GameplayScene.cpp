@@ -166,9 +166,25 @@ namespace centpd {
     ///////////////////////////////////////////////////////////////
     void GameplayScene::createCentipede() {
         auto startPos = ime::Index{0, static_cast<int>((m_grid->getCols() - 1) / 2)};
-        ime::GameObject* head = m_grid->addActor(CentipedeSegment::create(*this, CentipedeSegment::Type::Head), startPos);
-        ime::GridMover* gridMover = createGridMover("CENTIPEDE", head);
-        static_cast<CentipedeSegment*>(head)->setGridMover(gridMover);
+
+        ime::GameObject* segment = nullptr;
+        ime::GameObject* prevSegment = nullptr;
+        auto bodyCount = sCache().getPref("CENTIPEDE_LENGTH").getValue<unsigned int>();
+        for (auto i = 0u; i < bodyCount; i++) {
+            if (i == 0u)
+                segment = m_grid->addActor(CentipedeSegment::create(*this, CentipedeSegment::Type::Head), startPos);
+            else
+                segment = m_grid->addActor(CentipedeSegment::create(*this, CentipedeSegment::Type::Body), ime::Index{0, static_cast<int>(startPos.colm - i)});
+
+            ime::GridMover* gridMover = createGridMover("CENTIPEDE", segment);
+            static_cast<CentipedeSegment*>(segment)->setGridMover(gridMover);
+
+            if (prevSegment) {
+                static_cast<CentipedeSegment*>(prevSegment)->attachSegment(static_cast<CentipedeSegment*>(segment));
+            }
+
+            prevSegment = segment;
+        }
     }
 
     ///////////////////////////////////////////////////////////////
