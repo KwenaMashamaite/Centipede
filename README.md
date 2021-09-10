@@ -1,6 +1,6 @@
 ## How to play
 
-1. [Download](https://github.com/KwenaMashamaite/Centipede/releases/tag/v0.1.0)
+1. [Download](https://github.com/KwenaMashamaite/Centipede/releases/tag/v0.2.0)
    the game
 2. Extract the zip archive
 3. Run _Centipede.exe_
