@@ -179,6 +179,14 @@ namespace centpd {
             ime::GridMover* gridMover = createGridMover("CENTIPEDE", segment);
             static_cast<CentipedeSegment*>(segment)->setGridMover(gridMover);
 
+            static const bool isMushroomsEnabled = sCache().getPref("ENABLE_MUSHROOMS").getValue<bool>();
+            if (isMushroomsEnabled) {
+                // Replace shot segment with mushroom
+                segment->onPropertyChange("active", [this, segment](const ime::Property& property) {
+                    m_grid->addActor(Mushroom::create(*this), m_grid->getActorTile(segment));
+                });
+            }
+
             if (prevSegment) {
                 static_cast<CentipedeSegment*>(prevSegment)->attachSegment(static_cast<CentipedeSegment*>(segment));
             }
